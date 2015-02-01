@@ -53,6 +53,15 @@ func iterate_gkvlite(tb testing.TB, db *gkvlite.Store) {
 	}
 }
 
+func get_gkvlite(tb testing.TB, db *gkvlite.Store, d []KeyValue) {
+	c := db.GetCollection("data")
+	for _, v := range d {
+		if _, err := c.Get(v.Key); err != nil {
+			tb.Fatal(err)
+		}
+	}
+}
+
 func benchmarkInsert_gkvlite(b *testing.B, n int) {
 	for i := 0; i < b.N; i++ {
 		f, db := setup_gkvlite(b)
@@ -140,4 +149,37 @@ func BenchmarkIterate4_gkvlite(b *testing.B) {
 
 func BenchmarkIterate5_gkvlite(b *testing.B) {
 	benchmarkIterate_gkvlite(b, 10000)
+}
+
+func benchmarkGet_gkvlite(b *testing.B, n int) {
+	f, db := setup_gkvlite(b)
+	insert_gkvlite(b, db, Data[:n])
+	b.ResetTimer()
+	defer func() {
+		b.StopTimer()
+		teardown_gkvlite(b, f, db)
+	}()
+	for i := 0; i < b.N; i++ {
+		get_gkvlite(b, db, Data[:n])
+	}
+}
+
+func BenchmarkGet1_gkvlite(b *testing.B) {
+	benchmarkGet_gkvlite(b, 1)
+}
+
+func BenchmarkGet2_gkvlite(b *testing.B) {
+	benchmarkGet_gkvlite(b, 10)
+}
+
+func BenchmarkGet3_gkvlite(b *testing.B) {
+	benchmarkGet_gkvlite(b, 100)
+}
+
+func BenchmarkGet4_gkvlite(b *testing.B) {
+	benchmarkGet_gkvlite(b, 1000)
+}
+
+func BenchmarkGet5_gkvlite(b *testing.B) {
+	benchmarkGet_gkvlite(b, 10000)
 }

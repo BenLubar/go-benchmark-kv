@@ -44,6 +44,14 @@ func iterate_goleveldb(tb testing.TB, db *goleveldb.DB) {
 	}
 }
 
+func get_goleveldb(tb testing.TB, db *goleveldb.DB, d []KeyValue) {
+	for _, v := range d {
+		if _, err := db.Get(v.Key, nil); err != nil {
+			tb.Fatal(err)
+		}
+	}
+}
+
 func benchmarkInsert_goleveldb(b *testing.B, n int) {
 	for i := 0; i < b.N; i++ {
 		db := setup_goleveldb(b)
@@ -131,4 +139,37 @@ func BenchmarkIterate4_goleveldb(b *testing.B) {
 
 func BenchmarkIterate5_goleveldb(b *testing.B) {
 	benchmarkIterate_goleveldb(b, 10000)
+}
+
+func benchmarkGet_goleveldb(b *testing.B, n int) {
+	db := setup_goleveldb(b)
+	insert_goleveldb(b, db, Data[:n])
+	b.ResetTimer()
+	defer func() {
+		b.StopTimer()
+		teardown_goleveldb(b, db)
+	}()
+	for i := 0; i < b.N; i++ {
+		get_goleveldb(b, db, Data[:n])
+	}
+}
+
+func BenchmarkGet1_goleveldb(b *testing.B) {
+	benchmarkGet_goleveldb(b, 1)
+}
+
+func BenchmarkGet2_goleveldb(b *testing.B) {
+	benchmarkGet_goleveldb(b, 10)
+}
+
+func BenchmarkGet3_goleveldb(b *testing.B) {
+	benchmarkGet_goleveldb(b, 100)
+}
+
+func BenchmarkGet4_goleveldb(b *testing.B) {
+	benchmarkGet_goleveldb(b, 1000)
+}
+
+func BenchmarkGet5_goleveldb(b *testing.B) {
+	benchmarkGet_goleveldb(b, 10000)
 }

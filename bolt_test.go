@@ -54,6 +54,20 @@ func iterate_bolt(tb testing.TB, db *bolt.DB) {
 	}
 }
 
+func get_bolt(tb testing.TB, db *bolt.DB, d []KeyValue) {
+	if err := db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(dataBytes)
+
+		for _, v := range d {
+			_ = bucket.Get(v.Key)
+		}
+
+		return nil
+	}); err != nil {
+		tb.Fatal(err)
+	}
+}
+
 func benchmarkInsert_bolt(b *testing.B, n int) {
 	for i := 0; i < b.N; i++ {
 		db := setup_bolt(b)
@@ -141,4 +155,37 @@ func BenchmarkIterate4_bolt(b *testing.B) {
 
 func BenchmarkIterate5_bolt(b *testing.B) {
 	benchmarkIterate_bolt(b, 10000)
+}
+
+func benchmarkGet_bolt(b *testing.B, n int) {
+	db := setup_bolt(b)
+	insert_bolt(b, db, Data[:n])
+	b.ResetTimer()
+	defer func() {
+		b.StopTimer()
+		teardown_bolt(b, db)
+	}()
+	for i := 0; i < b.N; i++ {
+		get_bolt(b, db, Data[:n])
+	}
+}
+
+func BenchmarkGet1_bolt(b *testing.B) {
+	benchmarkGet_bolt(b, 1)
+}
+
+func BenchmarkGet2_bolt(b *testing.B) {
+	benchmarkGet_bolt(b, 10)
+}
+
+func BenchmarkGet3_bolt(b *testing.B) {
+	benchmarkGet_bolt(b, 100)
+}
+
+func BenchmarkGet4_bolt(b *testing.B) {
+	benchmarkGet_bolt(b, 1000)
+}
+
+func BenchmarkGet5_bolt(b *testing.B) {
+	benchmarkGet_bolt(b, 10000)
 }

@@ -50,6 +50,14 @@ func iterate_cznic_kv(tb testing.TB, db *cznic_kv.DB) {
 	tb.Fatal(err)
 }
 
+func get_cznic_kv(tb testing.TB, db *cznic_kv.DB, d []KeyValue) {
+	for _, v := range d {
+		if _, err := db.Get(nil, v.Key); err != nil {
+			tb.Fatal(err)
+		}
+	}
+}
+
 func benchmarkInsert_cznic_kv(b *testing.B, n int) {
 	for i := 0; i < b.N; i++ {
 		db := setup_cznic_kv(b)
@@ -137,4 +145,37 @@ func BenchmarkIterate4_cznic_kv(b *testing.B) {
 
 func BenchmarkIterate5_cznic_kv(b *testing.B) {
 	benchmarkIterate_cznic_kv(b, 10000)
+}
+
+func benchmarkGet_cznic_kv(b *testing.B, n int) {
+	db := setup_cznic_kv(b)
+	insert_cznic_kv(b, db, Data[:n])
+	b.ResetTimer()
+	defer func() {
+		b.StopTimer()
+		teardown_cznic_kv(b, db)
+	}()
+	for i := 0; i < b.N; i++ {
+		get_cznic_kv(b, db, Data[:n])
+	}
+}
+
+func BenchmarkGet1_cznic_kv(b *testing.B) {
+	benchmarkGet_cznic_kv(b, 1)
+}
+
+func BenchmarkGet2_cznic_kv(b *testing.B) {
+	benchmarkGet_cznic_kv(b, 10)
+}
+
+func BenchmarkGet3_cznic_kv(b *testing.B) {
+	benchmarkGet_cznic_kv(b, 100)
+}
+
+func BenchmarkGet4_cznic_kv(b *testing.B) {
+	benchmarkGet_cznic_kv(b, 1000)
+}
+
+func BenchmarkGet5_cznic_kv(b *testing.B) {
+	benchmarkGet_cznic_kv(b, 10000)
 }
